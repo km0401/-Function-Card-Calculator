@@ -1,16 +1,47 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import FunctionCardIcon from "./assets/icon_function_card.svg";
 
-function FunctionCard({ id, onInputChange, functionChainOrder, error }) {
+function FunctionCard({
+  id,
+  onInputChange,
+  functionChainOrder,
+  error,
+  onCoordinatesChange,
+}) {
   const [equation, setEquation] = useState("");
 
+  const inputRef = useRef(null);
+  const outputRef = useRef(null);
+
+  // Update coordinates when the component mounts or id changes
+  useEffect(() => {
+    const inputCircle = inputRef.current;
+    const outputCircle = outputRef.current;
+
+    if (inputCircle && outputCircle) {
+      const inputRect = inputCircle.getBoundingClientRect();
+      const outputRect = outputCircle.getBoundingClientRect();
+
+      // Pass coordinates to parent component
+      onCoordinatesChange(id, {
+        input: {
+          x: inputRect.left + window.scrollX + inputRect.width / 2,
+          y: inputRect.top + window.scrollY + inputRect.height / 2,
+        },
+        output: {
+          x: outputRect.left + window.scrollX + outputRect.width / 2,
+          y: outputRect.top + window.scrollY + outputRect.height / 2,
+        },
+      });
+    }
+  }, [id, onCoordinatesChange]); 
   const handleChange = (e) => {
     const input = e.target.value;
     setEquation(input);
-    onInputChange(id, input);
+    onInputChange(id, input); 
   };
 
-  // Determine the next function value based on the array index i.e. id
+  // The next function value or placeholder if at the end
   const nextFunctionValue =
     id === functionChainOrder.length - 1
       ? "-"
@@ -18,20 +49,18 @@ function FunctionCard({ id, onInputChange, functionChainOrder, error }) {
 
   return (
     <div
-      className="bg-white rounded-lg"
+      className="bg-white rounded-lg border border-gray-300 shadow-sm"
       style={{
         width: "235px",
         height: "251px",
-        border: "1px solid #DFDFDF",
         padding: "16px",
-        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
       }}
     >
       <div className="flex flex-row mb-2 gap-2 align-end">
         <img src={FunctionCardIcon} alt="Function Card Icon" />
         <h2
           className="text-gray-500 text-sm font-semibold"
-          style={{ fontSize: "14px", marginBottom: "8px", color: "#A5A5A5" }}
+          style={{ color: "#A5A5A5" }}
         >
           Function: {id + 1}
         </h2>
@@ -68,7 +97,6 @@ function FunctionCard({ id, onInputChange, functionChainOrder, error }) {
         </label>
         <select
           id="next-function"
-          type="text"
           className="border rounded-md"
           style={{
             fontSize: "12px",
@@ -77,7 +105,6 @@ function FunctionCard({ id, onInputChange, functionChainOrder, error }) {
             padding: "0 8px",
             border: "1px solid #D3D3D3",
             backgroundColor: "#F5F5F5",
-            fontColor: "#D3D3D3",
           }}
           disabled
           value={nextFunctionValue}
@@ -85,26 +112,22 @@ function FunctionCard({ id, onInputChange, functionChainOrder, error }) {
           <option value={nextFunctionValue}>{nextFunctionValue}</option>
         </select>
       </div>
-      
+
       <div className="flex justify-between mt-4 text-xs">
-        <label className="flex items-center">
-          <input
-            type="radio"
-            name={`function-${id}`}
-            value="input"
-            className="h-4 w-4"
+        <div className="flex items-center">
+          <span
+            className="w-4 h-4 bg-white rounded-full border-2"
+            ref={inputRef}
           />
-          <span className="ml-1">input</span> 
-        </label>
-        <label className="flex items-center">
-          <input
-            type="radio"
-            name={`function-${id}`}
-            value="output"
-            className="h-4 w-4" 
+          <span className="ml-2">input</span>
+        </div>
+        <div className="flex items-center">
+          <span
+            className="w-4 h-4 bg-white rounded-full border-2"
+            ref={outputRef}
           />
-          <span className="ml-1">output</span> 
-        </label>
+          <span className="ml-2">output</span>
+        </div>
       </div>
     </div>
   );
